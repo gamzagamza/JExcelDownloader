@@ -1,12 +1,9 @@
 package utils;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import resource.ExcelData;
-import resource.ExcelDataFactory;
+import resource.data.ExcelData;
+import resource.data.ExcelDataFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -19,6 +16,7 @@ public class JExcelDownloader {
 
     private Workbook workbook;
     private Sheet sheet;
+    private ExcelData excelData;
 
     public JExcelDownloader() {
         this.workbook = new XSSFWorkbook();
@@ -27,12 +25,12 @@ public class JExcelDownloader {
 
     public void excelDownload(List<?> data, Class<?> clazzType, HttpServletResponse response, String fileName, boolean useSeq) throws Exception {
         ExcelDataFactory excelDataFactory = new ExcelDataFactory();
-        ExcelData excelData = excelDataFactory.getExcelData(clazzType);
+        this.excelData = excelDataFactory.getExcelData(clazzType, this.workbook);
 
         setHttpHeader(response, fileName);
 
-        renderHeader(excelData, clazzType, useSeq);
-        renderBody(excelData, data, clazzType, useSeq);
+        renderHeader(clazzType, useSeq);
+        renderBody(data, clazzType, useSeq);
 
         write(response.getOutputStream());
     }
@@ -43,41 +41,51 @@ public class JExcelDownloader {
         response.setHeader("Content-Transfer-Encoding", "binary");
     }
 
-    private void renderHeader(ExcelData excelData, Class<?> clazzType, boolean useSeq) throws Exception {
+    private void renderHeader(Class<?> clazzType, boolean useSeq) throws Exception {
         Row row = this.sheet.createRow(ROW_INDEX++);
 
         int col = 0;
         for(Field field : clazzType.getDeclaredFields()) {
             if(field.isAnnotationPresent(annotation.Cell.class)) {
                 if (col == 0 && useSeq) {
-                    setCellValue("No", row, col++);
+                    Cell cell = row.createCell(col++);
+                    setCellValue(cell, "No");
                 }
                 String headerName = excelData.getHeaderMap().get(field.getName());
-                setCellValue(headerName, row, col++);
+
+                Cell cell = row.createCell(col++);
+                setCellStyle(cell, excelData.getHeaderStyleMap().get(field.getName()));
+                setCellValue(cell, headerName);
             }
         }
     }
 
-    private void renderBody(ExcelData excelData, List<?> data, Class<?> clazzType, boolean useSeq) throws Exception {
+    private void renderBody(List<?> data, Class<?> clazzType, boolean useSeq) throws Exception {
         for(Object object : data) {
             Row row = this.sheet.createRow(ROW_INDEX++);
 
             int col = 0;
             for(String fieldName : excelData.getFieldName()) {
                 if(col==0 && useSeq) {
-                    setCellValue(Integer.toString(ROW_INDEX-1), row, col++);
+                    Cell cell = row.createCell(col++);
+                    setCellValue(cell, Integer.toString(ROW_INDEX-1));
                 }
                 Field field = getField(clazzType, fieldName);
                 field.setAccessible(true);
                 Object cellValue = field.get(object);
 
-                setCellValue((String) cellValue, row, col++);
+                Cell cell = row.createCell(col++);
+                setCellStyle(cell, excelData.getBodyStyleMap().get(field.getName()));
+                setCellValue(cell, (String) cellValue);
             }
         }
     }
 
-    private void setCellValue(String value, Row row, int col) {
-        Cell cell = row.createCell(col);
+    private void setCellStyle(Cell cell, CellStyle cellStyle) {
+        cell.setCellStyle(cellStyle);
+    }
+
+    private void setCellValue(Cell cell, String value) {
         cell.setCellValue(value);
     }
 
