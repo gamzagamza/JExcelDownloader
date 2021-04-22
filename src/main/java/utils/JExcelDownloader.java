@@ -49,6 +49,7 @@ public class JExcelDownloader {
             if(field.isAnnotationPresent(annotation.Cell.class)) {
                 if (col == 0 && useSeq) {
                     Cell cell = row.createCell(col++);
+                    setCellStyle(cell, excelData.getDefaultHeaderStyle());
                     setCellValue(cell, "No");
                 }
                 String headerName = excelData.getHeaderMap().get(field.getName());
@@ -68,6 +69,7 @@ public class JExcelDownloader {
             for(String fieldName : excelData.getFieldName()) {
                 if(col==0 && useSeq) {
                     Cell cell = row.createCell(col++);
+                    setCellStyle(cell, excelData.getDefaultBodyStyle());
                     setCellValue(cell, Integer.toString(ROW_INDEX-1));
                 }
                 Field field = getField(clazzType, fieldName);

@@ -24,21 +24,25 @@ public class ExcelDataFactory {
         Map<String, String> headerMap = new HashMap<>();
         Map<String, CellStyle> headerStyleMap = new HashMap<>();
         Map<String, CellStyle> bodyStyleMap = new HashMap<>();
+        CellStyle defaultHeaderStyle = getDefaultCellStyle(clazz, wb, HEADER);
+        CellStyle defaultBodyStyle = getDefaultCellStyle(clazz, wb, BODY);
 
         for(Field field : clazz.getDeclaredFields()) {
             if(field.isAnnotationPresent(Cell.class)) {
                 Cell cell = field.getAnnotation(Cell.class);
-                headerMap.put(field.getName(), cell.headerName());
+
                 fieldName.add(field.getName());
+                headerMap.put(field.getName(), cell.headerName());
 
                 CustomCellStyle headerCellStyle = cell.headerStyle();
                 CustomCellStyle bodyCellStyle = cell.bodyStyle();
+
                 headerStyleMap.put(field.getName(), getCellStyle(clazz, headerCellStyle, wb, HEADER));
                 bodyStyleMap.put(field.getName(), getCellStyle(clazz, bodyCellStyle, wb, BODY));
             }
         }
 
-        return new ExcelData(fieldName, headerMap, headerStyleMap, bodyStyleMap);
+        return new ExcelData(fieldName, headerMap, headerStyleMap, bodyStyleMap, defaultHeaderStyle, defaultBodyStyle);
     }
 
     private CellStyle getCellStyle(Class<?> clazz, CustomCellStyle customCellStyle, Workbook wb, int location) {
@@ -50,10 +54,29 @@ public class ExcelDataFactory {
             } else {
                 AllCell allCell = clazz.getAnnotation(AllCell.class);
                 ExcelCellStyle excelCellStyle;
+
                 if(location == HEADER) excelCellStyle = allCell.headerStyle().excelCellStyle().newInstance();
                 else excelCellStyle = allCell.bodyStyle().excelCellStyle().newInstance();
+
                 excelCellStyle.styleApply(cellStyle);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return cellStyle;
+    }
+
+    private CellStyle getDefaultCellStyle(Class<?> clazz, Workbook wb, int location) {
+        CellStyle cellStyle = wb.createCellStyle();
+
+        try {
+            AllCell allCell = clazz.getAnnotation(AllCell.class);
+            ExcelCellStyle excelCellStyle;
+
+            if (location == HEADER) excelCellStyle = allCell.headerStyle().excelCellStyle().newInstance();
+            else excelCellStyle = allCell.bodyStyle().excelCellStyle().newInstance();
+
+            excelCellStyle.styleApply(cellStyle);
         } catch (Exception e) {
             e.printStackTrace();
         }
