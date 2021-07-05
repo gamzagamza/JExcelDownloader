@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class JExcelDownloader {
@@ -78,7 +80,10 @@ public class JExcelDownloader {
 
                 Cell cell = row.createCell(col++);
                 setCellStyle(cell, excelData.getBodyStyleMap().get(field.getName()));
-                setCellValue(cell, cellValue.toString());
+
+                String convertCellValue = cellObjectToString(cellValue);
+                System.out.println(convertCellValue);
+                setCellValue(cell, cellObjectToString(cellValue));
             }
         }
     }
@@ -103,5 +108,13 @@ public class JExcelDownloader {
             }
         }
         return null;
+    }
+
+    private String cellObjectToString(Object cellValue) {
+        if(cellValue instanceof LocalDateTime) {
+            return ((LocalDateTime) cellValue).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } else {
+            return cellValue.toString();
+        }
     }
 }
