@@ -74,6 +74,7 @@ public class JExcelDownloader {
                     setCellStyle(cell, excelData.getDefaultBodyStyle());
                     setCellValue(cell, Integer.toString(ROW_INDEX-1));
                 }
+
                 Field field = getField(clazzType, fieldName);
                 field.setAccessible(true);
                 Object cellValue = field.get(object);
@@ -108,7 +109,9 @@ public class JExcelDownloader {
     }
 
     private String cellObjectToString(Object cellValue) {
-        if(cellValue instanceof LocalDateTime) {
+        if (cellValue == null) {
+            return "";
+        } else if(cellValue instanceof LocalDateTime) {
             return ((LocalDateTime) cellValue).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         } else {
             return cellValue.toString();
