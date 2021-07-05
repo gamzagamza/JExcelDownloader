@@ -80,9 +80,6 @@ public class JExcelDownloader {
 
                 Cell cell = row.createCell(col++);
                 setCellStyle(cell, excelData.getBodyStyleMap().get(field.getName()));
-
-                String convertCellValue = cellObjectToString(cellValue);
-                System.out.println(convertCellValue);
                 setCellValue(cell, cellObjectToString(cellValue));
             }
         }
