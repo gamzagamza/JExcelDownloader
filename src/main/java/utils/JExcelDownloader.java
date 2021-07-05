@@ -78,7 +78,7 @@ public class JExcelDownloader {
 
                 Cell cell = row.createCell(col++);
                 setCellStyle(cell, excelData.getBodyStyleMap().get(field.getName()));
-                setCellValue(cell, (String) cellValue);
+                setCellValue(cell, cellValue.toString());
             }
         }
     }
